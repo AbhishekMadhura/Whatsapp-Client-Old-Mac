@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25D366"/>
+      <stop offset="0.55" stop-color="#1FB855"/>
+      <stop offset="1" stop-color="#128C7E"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAFBF0"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- app tile -->
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#tile)"/>
+  <rect x="0" y="0" width="1024" height="512" rx="228" fill="url(#sheen)"/>
+
+  <!-- speech bubble tail -->
+  <path d="M356 600 L356 764 Q356 792 380 776 L516 660 Z" fill="url(#bubble)"/>
+
+  <!-- speech bubble body -->
+  <rect x="248" y="288" width="528" height="376" rx="104" fill="url(#bubble)"/>
+
+  <!-- typing indicator -->
+  <circle cx="400" cy="476" r="42" fill="#075E54"/>
+  <circle cx="512" cy="476" r="42" fill="#128C7E"/>
+  <circle cx="624" cy="476" r="42" fill="#25D366"/>
+</svg>

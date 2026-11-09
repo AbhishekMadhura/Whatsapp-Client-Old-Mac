@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+*.app
+WhatsApp-darwin-*/
+WhatsApp-win32-*/
+WhatsApp-linux-*/
+
+# macOS
+.DS_Store
+._*
+
+# Perch workspace metadata (contains local absolute paths)
+.perch/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.*
