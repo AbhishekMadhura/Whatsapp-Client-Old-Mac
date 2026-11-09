@@ -136,8 +136,7 @@ whatsapp-electron/
 │       ├── logo.svg             # source of truth for the icon
 │       ├── logo-1024.png        # runtime icon, transparent background
 │       ├── logo.icns            # macOS bundle icon
-│       ├── logo.ico             # Windows icon
-│       └── render_logo.py       # regenerates the PNG from the SVG geometry
+│       └── logo.ico             # Windows icon
 └── .gitignore
 ```
 
@@ -161,14 +160,26 @@ const CONFIG = {
 
 ### Regenerating the icon
 
-`logo.svg` is the source. The PNG is rendered by a small script rather than a generic SVG
-converter, because most converters flatten transparency onto white:
+`logo.svg` is the source of truth. To rebuild the PNG, use a converter that preserves the alpha
+channel:
 
 ```bash
-python3 assets/brand/render_logo.py
+# librsvg (brew install librsvg)
+rsvg-convert -w 1024 -h 1024 assets/brand/logo.svg -o assets/brand/logo-1024.png
+
+# or Inkscape
+inkscape assets/brand/logo.svg -w 1024 -h 1024 -o assets/brand/logo-1024.png
 ```
 
-Requires Pillow (`pip install Pillow`). After changing the PNG, rebuild the platform icons.
+Avoid QuickLook (`qlmanage -t`) and macOS Preview for this. Both flatten the artwork onto an
+opaque white background, which gives the icon white corners instead of transparency. Confirm the
+result before going further:
+
+```bash
+sips -g hasAlpha assets/brand/logo-1024.png   # expect: hasAlpha: yes
+```
+
+Then rebuild the platform icons from that PNG.
 
 macOS `.icns` — `iconutil` needs the complete set including `@2x` variants:
 
@@ -190,8 +201,7 @@ Windows `.ico` — needs a multi-size ICO. Pillow handles it in one line:
 python3 -c "from PIL import Image; Image.open('assets/brand/logo-1024.png').save('assets/brand/logo.ico', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
 ```
 
-Note that `render_logo.py` reimplements the SVG geometry by hand. If you change shapes in the
-SVG, mirror the change in the script; colors and layout are the parts most likely to stay fixed.
+This one needs Pillow (`pip install Pillow`).
 
 ---
 
