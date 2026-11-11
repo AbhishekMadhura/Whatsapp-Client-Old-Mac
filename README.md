@@ -1,247 +1,90 @@
-# WhatsApp Desktop
+# WhatsApp Client for Old Macs
 
-A minimal, lightweight desktop client for WhatsApp Web, built with Electron.
+An unofficial desktop client for **WhatsApp** on older Macs running **macOS Catalina (10.15)**, built with Electron.
 
-No browser tabs, no address bar, no distractions. Just WhatsApp in its own window, with native
-notifications, a dock badge for unread messages, and an app icon that belongs on your dock.
+The official WhatsApp desktop app no longer supports older macOS versions, and using WhatsApp Web in a browser tab is slow to load every time. This project wraps WhatsApp Web (`web.whatsapp.com`) in its own app window, using an Electron version that still runs on Catalina.
 
-> **Unofficial.** This is an independent wrapper around `web.whatsapp.com`. It is not affiliated
-> with, endorsed by, or supported by Meta or WhatsApp.
-
----
+> **Disclaimer:** This is an independent project. It is not affiliated with, endorsed by, or sponsored by WhatsApp or Meta. "WhatsApp" is a trademark of WhatsApp LLC. The app only loads the official WhatsApp Web page and does not modify, reimplement, or reverse-engineer WhatsApp.
 
 ## Features
 
-- **Dedicated window** — WhatsApp Web in its own app, not a browser tab
-- **Unread badge** — the macOS dock icon shows your unread count
-- **Native notifications** — message alerts come through the OS, not a browser
-- **Persistent session** — you scan the QR code once; it stays logged in
-- **Links open in your browser** — external links leave the app instead of trapping you inside it
-- **Closes to background** — closing the window hides it, so it keeps receiving messages
-- **Custom icon** — original artwork, no third-party trademarks
+- Dedicated WhatsApp window instead of a browser tab
+- Stays signed in between launches
+- Desktop notifications
+- Unread count shown on the Dock icon
+- Closing the window hides it; click the Dock icon to bring it back, or press Cmd+Q to quit
+- Links open in your default browser
 
----
+## Why Electron 32?
+
+| Option | Result on Catalina |
+|---|---|
+| Tauri | Uses the system WebKit (Safari 15.6.1 on Catalina). WhatsApp Web loaded half-styled and failed to link a device |
+| Electron 32 | Ships its own Chromium 128, the last Chromium version that supports Catalina |
+
+Electron 33 and later require macOS 11 or newer, so this project is pinned to **Electron 32**. Do not upgrade it on Catalina.
 
 ## Requirements
 
-| Requirement | Version |
-| --- | --- |
-| [Node.js](https://nodejs.org/) | 18 or newer (tested on 22) |
-| npm | 9 or newer (tested on 10) |
-| An active WhatsApp account | linked to your phone |
+- macOS 10.15 Catalina (Intel, x64)
+- Node.js 20 or an older LTS (newer Node versions may not run on Catalina)
+- npm
+- WhatsApp installed on your phone, to link the device
 
-Works on **macOS** and **Windows**. Linux is supported by Electron and the code is
-platform-agnostic, but the packaging script below is written for macOS — see
-[Building a distributable](#building-a-distributable).
-
----
-
-## Setup
-
-### 1. Clone the repository
+## Getting started
 
 ```bash
-git clone https://github.com/<your-username>/whatsapp-electron.git
-cd whatsapp-electron
-```
-
-### 2. Install dependencies
-
-```bash
+git clone https://github.com/AbhishekMadhura/Whatsapp-Client-Old-Mac.git
+cd Whatsapp-Client-Old-Mac
 npm install
-```
-
-This pulls in Electron (~290 MB) and the packager. First install takes a minute or two.
-
-### 3. Run it
-
-```bash
 npm start
 ```
 
-The window opens on the WhatsApp Web login screen.
+When the window opens, scan the QR code with your phone: **WhatsApp > Settings > Linked devices > Link a device**.
 
-### 4. Link your account
-
-Scan the QR code with your phone:
-
-1. Open **WhatsApp** on your phone
-2. Go to **Settings → Linked devices**
-3. Tap **Link a device**
-4. Point your phone at the QR code in the app window
-
-You only do this once. The session is stored in a persistent partition and survives restarts.
-
----
-
-## Usage notes
-
-**Closing the window doesn't quit the app.** It hides to the background so messages keep
-arriving. To actually quit:
-
-- macOS: `Cmd + Q`, or right-click the dock icon → Quit
-- Windows: right-click the taskbar icon → Close window
-
-**Microphone and camera** are requested by WhatsApp itself when you start a voice or video call.
-The app grants media permissions through Electron's permission handler.
-
-**Where your session lives.** Login state is kept in Electron's per-app data directory, in a
-partition named `persist:whatsapp`:
-
-- macOS: `~/Library/Application Support/whatsapp-electron/Partitions/whatsapp`
-- Windows: `%APPDATA%\whatsapp-electron\Partitions\whatsapp`
-
-Delete that folder to log out completely.
-
----
-
-## Building a distributable
-
-The included `package` script builds a macOS Apple Silicon app:
+## Build the app
 
 ```bash
-npm run package
+npx electron-packager . WhatsApp --platform=darwin --arch=x64 --overwrite
 ```
 
-Output lands in `WhatsApp-darwin-arm64/`. For other targets, call the packager directly:
+This creates a `WhatsApp-darwin-x64` folder containing `WhatsApp.app`. Drag it into your Applications folder.
 
-```bash
-# macOS, Intel
-npx electron-packager . WhatsApp --platform=darwin --arch=x64 --icon=assets/brand/logo.icns --overwrite
-
-# Windows
-npx electron-packager . WhatsApp --platform=win32 --arch=x64 --icon=assets/brand/logo.ico --overwrite
-
-# Linux
-npx electron-packager . WhatsApp --platform=linux --arch=x64 --overwrite
-```
-
-The build is unsigned. On macOS, Gatekeeper will warn on first launch — right-click the app and
-choose **Open**, or clear the quarantine flag:
-
-```bash
-xattr -dr com.apple.quarantine "WhatsApp-darwin-arm64/WhatsApp.app"
-```
-
----
+Because the app is unsigned, macOS may block it the first time. Right-click `WhatsApp.app`, choose **Open**, then confirm.
 
 ## Project structure
 
 ```
-whatsapp-electron/
-├── main.js                      # the entire application (~66 lines)
-├── package.json                 # scripts and dependencies
-├── assets/
-│   └── brand/
-│       ├── logo.svg             # source of truth for the icon
-│       ├── logo-1024.png        # runtime icon, transparent background
-│       ├── logo.icns            # macOS bundle icon
-│       └── logo.ico             # Windows icon
-└── .gitignore
+.
+├── main.js         # Electron main process (window, user agent, badge, tray behavior)
+├── package.json
+└── README.md
 ```
 
-### Configuration
+## How it works
 
-All app settings live in the `CONFIG` object at the top of `main.js`:
+The app opens a normal Electron window pointed at `https://web.whatsapp.com`. It sets a Chrome user agent so WhatsApp Web accepts the browser, and stores the session in a persistent partition so you stay logged in. The Dock badge is read from the page title (for example `(3) WhatsApp`).
 
-```js
-const CONFIG = {
-  title: 'WhatsApp',
-  url: 'https://web.whatsapp.com',
-  partition: 'persist:whatsapp',
-  inApp: [],          // hosts allowed to open inside the app window
-};
-```
+## Known limitations
 
-- **`url`** — change this to point the wrapper at a different web app
-- **`partition`** — the session name; change it to keep a second, separate login
-- **`inApp`** — domains that open inside the window instead of the system browser. Empty by
-  default, so every link opens externally. Add entries like `'example.com'` to keep a domain in-app.
-
-### Regenerating the icon
-
-`logo.svg` is the source of truth. To rebuild the PNG, use a converter that preserves the alpha
-channel:
-
-```bash
-# librsvg (brew install librsvg)
-rsvg-convert -w 1024 -h 1024 assets/brand/logo.svg -o assets/brand/logo-1024.png
-
-# or Inkscape
-inkscape assets/brand/logo.svg -w 1024 -h 1024 -o assets/brand/logo-1024.png
-```
-
-Avoid QuickLook (`qlmanage -t`) and macOS Preview for this. Both flatten the artwork onto an
-opaque white background, which gives the icon white corners instead of transparency. Confirm the
-result before going further:
-
-```bash
-sips -g hasAlpha assets/brand/logo-1024.png   # expect: hasAlpha: yes
-```
-
-Then rebuild the platform icons from that PNG.
-
-macOS `.icns` — `iconutil` needs the complete set including `@2x` variants:
-
-```bash
-mkdir -p logo.iconset
-for s in 16 32 128 256 512; do
-  sips -z $s $s assets/brand/logo-1024.png --out logo.iconset/icon_${s}x${s}.png
-done
-cp logo.iconset/icon_32x32.png   logo.iconset/icon_16x16@2x.png
-cp logo.iconset/icon_256x256.png logo.iconset/icon_128x128@2x.png
-cp logo.iconset/icon_512x512.png logo.iconset/icon_256x256@2x.png
-sips -z 1024 1024 assets/brand/logo-1024.png --out logo.iconset/icon_512x512@2x.png
-iconutil -c icns logo.iconset -o assets/brand/logo.icns
-```
-
-Windows `.ico` — needs a multi-size ICO. Pillow handles it in one line:
-
-```bash
-python3 -c "from PIL import Image; Image.open('assets/brand/logo-1024.png').save('assets/brand/logo.ico', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-```
-
-This one needs Pillow (`pip install Pillow`).
-
----
+- **It is a web wrapper, not a native client.** It has the same features and limits as WhatsApp Web, including limited calling.
+- **Your phone must stay linked.** As with any WhatsApp Web session, WhatsApp may ask you to reconnect.
+- **Aging browser engine.** Chromium 128 no longer receives security updates, and WhatsApp may eventually require a newer browser. If it shows an "update your browser" page, that is the likely cause.
+- **Unsigned app.** It is not code-signed or notarized.
+- **Default Electron icon.** Add your own `.icns` file and pass `--icon=icon.icns` to `electron-packager` to change it.
 
 ## Troubleshooting
 
-**QR code won't load / blank window**
-WhatsApp Web occasionally rejects unusual user agents. The app sets a Chrome 128 UA string in
-`main.js`; if login breaks after a WhatsApp update, try updating that string.
+**`npm start` fails with a JSON error.** Check `package.json` for a missing comma or stray character.
 
-**"This version of WhatsApp is out of date"**
-WhatsApp Web requires a recent browser engine. Bump Electron:
+**Syntax error at the first line of `main.js`.** A stray character was probably pasted before `const`. Open the file and delete it.
 
-```bash
-npm install --save-dev electron@latest
-```
+**"WhatsApp works with Safari 15+" page.** The user agent is missing or wrong. Make sure `main.js` still sets it.
 
-**Notifications don't appear**
-Check that notifications are allowed for the app in your OS settings. On macOS:
-**System Settings → Notifications → WhatsApp**.
+**Notifications do not appear.** Allow notifications for the app in System Preferences > Notifications.
 
-**Stuck on "Loading your chats"**
-Clear the session and re-link. Quit the app, delete the partition folder listed under
-[Usage notes](#usage-notes), and start again.
+**An old icon keeps showing after you rebuild.** Run `killall Dock` to clear the icon cache.
 
-**App won't quit**
-Closing the window only hides it. Use `Cmd + Q` on macOS or quit from the taskbar on Windows.
+## Contributing
 
----
-
-## Disclaimer
-
-This project is an unofficial client. It is not affiliated with, endorsed by, or supported by
-Meta Platforms, Inc. or WhatsApp. "WhatsApp" and the WhatsApp name are trademarks of Meta
-Platforms, Inc. This project ships no WhatsApp branding or logo assets; the icon in
-`assets/brand/` is original artwork.
-
-Use it with your own account at your own risk. Automating or modifying the WhatsApp client may
-be contrary to WhatsApp's Terms of Service, and accounts have been known to be restricted for
-unofficial client use. Understand that before you use this.
-
-## License
-
-ISC — see [LICENSE](LICENSE).
+Issues and pull requests are welcome, especially from other people stuck on older macOS versions.
